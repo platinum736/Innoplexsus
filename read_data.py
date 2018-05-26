@@ -92,7 +92,7 @@ def preprocess(df):
     return words
 
 
-def createVocab(train_info):
+def createVocab(train_info,test_info):
     vocab_words = []
     all_words=[]
     for i in range(0, train_info.shape[0]):
@@ -102,11 +102,19 @@ def createVocab(train_info):
         #train_info.iloc[i]['words'] = words
         vocab_words.append(set(words))
     train_info['words']=all_words
+    all_words = []
+    for i in range(0,test_info.shape[0]):
+        print(i)
+        words = preprocess(train_info.iloc[i])
+        all_words.append(words)
+        #train_info.iloc[i]['words'] = words
+        vocab_words.append(set(words))
+    test_info['words']=all_words
     print(len(vocab_words))
-    return vocab_words,train_info
+    return vocab_words,train_info,test_info
 
 
 
-vocab,train_info = createVocab(train_info)
+vocab,train_info,test_info = createVocab(train_info,test_info)
 print(len(set(vocab)))
 print(train_info.columns)
