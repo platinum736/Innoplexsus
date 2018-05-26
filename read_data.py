@@ -114,7 +114,31 @@ def createVocab(train_info,test_info):
     return vocab_words,train_info,test_info
 
 
+def createRepresentation(train_info, test_info, vocabulary):
+    nrow = train_info.shape[0] + test_info.shape[0]
+    vocabulary_map = dict()
+    for i in range(0,len(vocabulary)):
+        vocabulary_map[vocabulary[i]]=i
+    df = np.zeros([nrow,len(vocabulary)])
+    for i in range(0,train_info.shape[0]):
+        for word in train_info.iloc[i]['words']:
+            df[i][vocabulary_map[word]] = 1
+    j = i
+
+    for i in range(0,test_info.shape[0]):
+        for word in test_info.iloc[i]['words']:
+            df[j+i][vocabulary_map[word]] = 1
+    return df
+
+
+
+
 
 vocab,train_info,test_info = createVocab(train_info,test_info)
-print(len(set(vocab)))
+vocabulary = []
+for vocabList in vocab:
+    vocabulary.extend(vocabList)
+vocabulary = set(vocabulary)
+print(len(vocabulary))
 print(train_info.columns)
+df = createRepresentation(train_info,test_info,vocabulary)
