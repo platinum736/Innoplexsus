@@ -116,6 +116,7 @@ def createVocab(train_info,test_info):
 
 def createRepresentation(train_info, test_info, vocabulary):
     nrow = train_info.shape[0] + test_info.shape[0]
+    vocabulary = list(vocabulary)
     vocabulary_map = dict()
     for i in range(0,len(vocabulary)):
         vocabulary_map[vocabulary[i]]=i
@@ -131,6 +132,51 @@ def createRepresentation(train_info, test_info, vocabulary):
     return df
 
 
+def createTrainSet(train_info,vocabulary,train,df):
+    trainset=pd.DataFrame()
+    for i in range(0,train.shape[0]):
+        print('train'+str(i))
+        c_pmid = train.iloc[i]['pmid']
+        rowindex = train_info[train_info['pmid']==c_pmid].index.values[0]
+        row = df[rowindex]
+        ref_list = train.iloc[i]['ref_list']
+        c_set = train_info[train_info['pmid']==train.iloc[i]['pmid']]['set'].values[0]
+        for item in ref_list:
+            refIndex = train_info[train_info['pmid']==item].index.values[0]
+            full_row = row
+            full_row.extend(df[refIndex])
+            full_row.extend([1])
+            trainset.append([full_row])
+
+        for j in range(0,train_info.shape[0]):
+            if train_info.iloc[j]['pmid'] != c_pmid \
+                and train_info.iloc[j]['pmid'] not in ref_list \
+                    and train_info.iloc[j]['set']==c_set:
+                nonrefIndex = train_info.iloc[j].index.values[0]
+                full_row = row
+                full_row.extend(df[nonrefIndex])
+                full_row.extend([0])
+                trainset.append([full_row])
+    return trainset
+
+
+def createTestSet(test_info, vocabulary, test, df):
+    testset = pd.DataFrame()
+    for i in range(0,test.shape[0]):
+        print('test'+str(i))
+        c_pmid = test.iloc[i]['pmid']
+        rowindex = test_info[test_info['pmid']==c_pmid].index.values[0]
+        row = df[rowindex]
+        c_set = train_info[test_info['pmid']==test.iloc[i]['pmid']]['set'].values[0]
+
+        for j in range(0,test_info.shape[0]):
+            if test.iloc[j]['pmid'] != c_pmid \
+                    and test_info.iloc[j]['set']!=c_set:
+                Index = test_info.iloc[j].index.values[0]
+                full_row = row
+                full_row.extend(df[Index])
+                testset.append([full_row])
+    return testset
 
 
 
@@ -142,3 +188,10 @@ vocabulary = set(vocabulary)
 print(len(vocabulary))
 print(train_info.columns)
 df = createRepresentation(train_info,test_info,vocabulary)
+train_set = createTrainSet(train_info,vocabulary,train,df)
+train_set.to_csv('trainData.csv')
+ntrainRows = train_info.shape[0]
+df_test = df[ntrainRows:]
+test_set = createTrainSet(test_info,vocabulary,test,df_test)
+test_set.to_csv('testData.csv')
+
